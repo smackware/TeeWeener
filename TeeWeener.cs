@@ -11,7 +11,7 @@ using System.Collections.Generic;
 public class TeeWeener 
 {
 	public static readonly TeeWeenerController controller;
-
+	
 	static TeeWeener() {
 		GameObject go = new GameObject("TeeWeenerController");
 		controller = go.AddComponent<TeeWeenerController>();
@@ -70,51 +70,25 @@ public class TeeWeener
 		}
 	}
 
-	public interface ICurve 
-	{
-		float GetFor(float x);
-	}
-
-	public class LinearCurve : ICurve 
-	{
-		public float GetFor(float x) 
-		{
-			return x;
-		}
-	}
-
-	public class SinCurve : ICurve 
-	{
-		public float GetFor(float x) 
-		{		
-			return Mathf.Sin ( x*90 * Mathf.Deg2Rad );
-		}
-	}
-
-	public static class CurvePresets 
-	{
-		public static ICurve Linear = new LinearCurve();
-	}
-
 	public abstract class TWValueProgress<T> : ITWProgress
 	{
 
 		private readonly T _to;
 		private readonly float _duration;
-		private readonly ICurve _curve;
+		private readonly Func<float,float> _easing;
 		private readonly Action<T> _setterLambda;
 		private readonly Func<T> _getterLambda;
 		private float _runningTime;
 		private T _from;
 
 
-		public TWValueProgress(Action<T> setterLambda, Func<T> getterLambda, T to, float duration, ICurve curve) 
+		public TWValueProgress(Action<T> setterLambda, Func<T> getterLambda, T to, float duration, Func<float,float> easing) 
 		{
 			_setterLambda = setterLambda;
 			_getterLambda = getterLambda;
 			_to = to;
 			_duration = duration;
-			_curve = curve;
+			_easing = easing;
 			_runningTime = 0;
 		}
 
@@ -130,7 +104,7 @@ public class TeeWeener
 			_runningTime += usedDeltaTime;
 			float transitionPct = _runningTime / _duration;
 
-			float distancePct = _curve.GetFor(transitionPct);
+			float distancePct = _easing(transitionPct);
 
 			T result = SetState(_from, _to, distancePct);
 			_setterLambda(result);
@@ -147,8 +121,8 @@ public class TeeWeener
 
 	public class TWVector3Progress : TWValueProgress<Vector3> 
 	{
-		public TWVector3Progress(Action<Vector3> setterLambda, Func<Vector3> getterLambda, Vector3 to, float duration, ICurve curve) : 
-			base(setterLambda, getterLambda, to, duration, curve) 
+		public TWVector3Progress(Action<Vector3> setterLambda, Func<Vector3> getterLambda, Vector3 to, float duration, Func<float,float> easing) : 
+			base(setterLambda, getterLambda, to, duration, easing) 
 		{
 		}
 
@@ -162,8 +136,8 @@ public class TeeWeener
 
 	public class TWFloatProgress : TWValueProgress<float> 
 	{
-		public TWFloatProgress(Action<float> setterLambda, Func<float> getterLambda, float to, float duration, ICurve curve) : 
-			base(setterLambda, getterLambda, to, duration, curve) 
+		public TWFloatProgress(Action<float> setterLambda, Func<float> getterLambda, float to, float duration, Func<float,float> easing) : 
+			base(setterLambda, getterLambda, to, duration, easing) 
 		{
 		}
 		
@@ -176,12 +150,11 @@ public class TeeWeener
 
 	public class TWSequence
 	{
-
-
 		private List<ITWProgress> _processes;
 		private ITWProgress _currentProcess;
 		private Transform _transform;
-		private float _spareDeltaTime; // Spare deltatime is remaining time of the currently finished step, passed on to the next step
+		// Spare deltatime is remaining time of the currently finished step, passed on to the next step for precision of positioning through time
+		private float _spareDeltaTime; 
 
 		public TWSequence(Transform transform) 
 		{
@@ -195,21 +168,11 @@ public class TeeWeener
 			controller.Add(this);
 		}
 
-		ICurve GetCurveOrDefaultToLinear(ICurve curve) 
+		public TWSequence MoveTo(Vector3 pos, float duration, Func<float,float> easing) 
 		{
-			if (curve == null) 
-			{
-				return CurvePresets.Linear;
-			}
-			return curve;
-		}
-
-		public TWSequence MoveTo(Vector3 pos, float duration, ICurve curve) 
-		{
-			curve = GetCurveOrDefaultToLinear(curve);
 			Action<Vector3> setterLambda = x => _transform.position = x;
 			Func<Vector3> getterLambda = () => _transform.position;
-			ITWProgress step = new TWVector3Progress(setterLambda, getterLambda, pos, duration, curve);
+			ITWProgress step = new TWVector3Progress(setterLambda, getterLambda, pos, duration, easing);
 			_processes.Add(step);
 			return this;
 		}
