@@ -12,6 +12,10 @@ public class TeeWeenerController : MonoBehaviour
 		_sequences.Add(seq);
 	}
 
+	void Awake() {
+		gameObject.GetComponent<Transform>().hideFlags = HideFlags.HideInInspector |  HideFlags.HideInHierarchy;
+	}
+
 	void Update() 
 	{
 
