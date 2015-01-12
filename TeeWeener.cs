@@ -8,7 +8,6 @@ public class TeeWeener
 	public static readonly TeeWeenerController controller;
 
 	static TeeWeener() {
-		Debug.Log("ASDASD");
 		GameObject go = new GameObject("TeeWeenerController");
 		controller = go.AddComponent<TeeWeenerController>();
 	}
@@ -120,7 +119,6 @@ public class TeeWeener
 
 			T result = SetState(_from, _to, distancePct);
 			_setterLambda(result);
-			Debug.Log(transitionPct + " " + distancePct + " " + remainingTime + " " + excessDeltaTime);
 			return excessDeltaTime;
 
 		}
