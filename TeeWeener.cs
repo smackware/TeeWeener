@@ -3,6 +3,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+
+/* Usage example
+ * TeeWeener.with(_myTransform).MoveTo(Vector3.zero, 3, CurvePresets.Linear).Wait(4).Start()
+ */
+
 public class TeeWeener 
 {
 	public static readonly TeeWeenerController controller;
