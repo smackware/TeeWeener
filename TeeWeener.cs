@@ -12,7 +12,8 @@ public class TeeWeener
 		controller = go.AddComponent<TeeWeenerController>();
 	}
 
-	public static TWSequence use(Transform transform) {
+	public static TWSequence with(Transform transform) 
+	{
 		return new TWSequence(transform);
 	}
 
