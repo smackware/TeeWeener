@@ -22,10 +22,12 @@ public class TeeWeener
 		return new TWSequence(transform);
 	}
 
-	public class TWException : Exception {
+	public class TWException : Exception 
+	{
 	}
 
-	public class TWEmptySequenceException : TWException {
+	public class TWEmptySequenceException : TWException 
+	{
 	}
 
 	interface ITWProgress
@@ -62,28 +64,35 @@ public class TeeWeener
 			return excessDeltaTime;
 		}
 		
-		public bool IsFinished() {
+		public bool IsFinished() 
+		{
 			return _runningTime >= _duration;
 		}
 	}
 
-	public interface ICurve {
+	public interface ICurve 
+	{
 		float GetFor(float x);
 	}
 
-	public class LinearCurve : ICurve {
-		public float GetFor(float x) {
+	public class LinearCurve : ICurve 
+	{
+		public float GetFor(float x) 
+		{
 			return x;
 		}
 	}
 
-	public class SinCurve : ICurve {
-		public float GetFor(float x) {		
+	public class SinCurve : ICurve 
+	{
+		public float GetFor(float x) 
+		{		
 			return Mathf.Sin ( x*90 * Mathf.Deg2Rad );
 		}
 	}
 
-	public static class CurvePresets {
+	public static class CurvePresets 
+	{
 		public static ICurve Linear = new LinearCurve();
 	}
 
@@ -130,7 +139,8 @@ public class TeeWeener
 		}
 		public abstract T SetState(T from, T to, float distancePct);
 
-		public bool IsFinished() {
+		public bool IsFinished() 
+		{
 			return _runningTime >= _duration;
 		}
 	}
@@ -173,13 +183,15 @@ public class TeeWeener
 		private Transform _transform;
 		private float _spareDeltaTime; // Spare deltatime is remaining time of the currently finished step, passed on to the next step
 
-		public TWSequence(Transform transform) {
+		public TWSequence(Transform transform) 
+		{
 			_processes = new List<ITWProgress>();
 			_transform = transform;
 			_spareDeltaTime = 0;
 		}
 
-		public void Start() {
+		public void Start() 
+		{
 			controller.Add(this);
 		}
 
@@ -228,7 +240,8 @@ public class TeeWeener
 			}
 		}
 
-		public bool IsFinihsed() {
+		public bool IsFinihsed() 
+		{
 			return _processes.Count == 0;
 		}
 	}
