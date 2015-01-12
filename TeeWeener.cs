@@ -49,10 +49,12 @@ public class TeeWeener
 		public TWWait(float duration) 
 		{
 			_duration = duration;
-			_runningTime = 0;
 		}
 
-		public void Start() {}
+		public void Start() 
+		{
+			_runningTime = 0;
+		}
 
 
 		public float Update(float deltaTime) 
@@ -89,10 +91,10 @@ public class TeeWeener
 			_to = to;
 			_duration = duration;
 			_easing = easing;
-			_runningTime = 0;
 		}
 
 		public void Start() {
+			_runningTime = 0;
 			_from = _getterLambda();
 		}
 
@@ -152,9 +154,11 @@ public class TeeWeener
 	{
 		private List<ITWProgress> _processes;
 		private ITWProgress _currentProcess;
+		private int _currentProcessIndex = 0;
 		private Transform _transform;
 		// Spare deltatime is remaining time of the currently finished step, passed on to the next step for precision of positioning through time
-		private float _spareDeltaTime; 
+		private float _spareDeltaTime;
+		private bool _finished = false;
 
 		public TWSequence(Transform transform) 
 		{
@@ -165,14 +169,36 @@ public class TeeWeener
 
 		public void Start() 
 		{
+			_currentProcessIndex = 0;
+			_finished = false;
 			controller.Add(this);
 		}
 
-		public TWSequence MoveTo(Vector3 pos, float duration, Func<float,float> easing) 
+		public TWSequence MoveTo(Vector3 to, float duration, Func<float,float> easing) 
 		{
 			Action<Vector3> setterLambda = x => _transform.position = x;
 			Func<Vector3> getterLambda = () => _transform.position;
-			ITWProgress step = new TWVector3Progress(setterLambda, getterLambda, pos, duration, easing);
+			return Vector3To(setterLambda, getterLambda, to, duration, easing);
+		}
+		
+		public TWSequence ScaleTo(Vector3 to, float duration, Func<float,float> easing) 
+		{
+			Action<Vector3> setterLambda = x => _transform.localScale = x;
+			Func<Vector3> getterLambda = () => _transform.localScale;
+			return Vector3To(setterLambda, getterLambda, to, duration, easing);
+		}
+
+
+		public TWSequence Vector3To(Action<Vector3> setterLambda, Func<Vector3> getterLambda, Vector3 to, float duration, Func<float,float> easing) 
+		{
+			ITWProgress step = new TWVector3Progress(setterLambda, getterLambda, to, duration, easing);
+			_processes.Add(step);
+			return this;
+		}
+
+		public TWSequence FloatTo(Action<float> setterLambda, Func<float> getterLambda, float to, float duration, Func<float,float> easing) 
+		{
+			ITWProgress step = new TWFloatProgress(setterLambda, getterLambda, to, duration, easing);
 			_processes.Add(step);
 			return this;
 		}
@@ -190,22 +216,31 @@ public class TeeWeener
 			if (IsFinihsed()) {
 				throw new TWEmptySequenceException(); 
 			}
-			// Play the current step
-			if (_currentProcess != _processes[0]) {
-				_currentProcess = _processes[0];
+			// If the current process is a new one, call Start on it.
+			if (_currentProcess != _processes[_currentProcessIndex]) 
+			{
+				_currentProcess = _processes[_currentProcessIndex];
 				_currentProcess.Start ();
 			}
 
-			_spareDeltaTime = _currentProcess.Update(_spareDeltaTime + deltaTime);
-			// Cleanup the step if its finished
-			if (_currentProcess.IsFinished()) {
-				_processes.RemoveAt(0);
+			// Move to the next step if the step is finished
+			if (_currentProcess.IsFinished()) 
+			{
+				_currentProcessIndex++;
+				if (_currentProcessIndex >= _processes.Count) {
+					_finished = true;
+					return;
+				}
+			} 
+			else // Otherwise - run update of the process
+			{
+				_spareDeltaTime = _currentProcess.Update(_spareDeltaTime + deltaTime);
 			}
 		}
 
 		public bool IsFinihsed() 
 		{
-			return _processes.Count == 0;
+			return _finished;
 		}
 	}
 }
