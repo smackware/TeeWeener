@@ -44,8 +44,8 @@ public class TeeWeener
 			_runningTime = 0;
 		}
 
-		public void Start() {
-		}
+		public void Start() {}
+
 
 		public float Update(float deltaTime) 
 		{
@@ -163,6 +163,7 @@ public class TeeWeener
 
 
 		private List<ITWProgress> _processes;
+		private ITWProgress _currentProcess;
 		private Transform _transform;
 		private float _spareDeltaTime; // Spare deltatime is remaining time of the currently finished step, passed on to the next step
 
@@ -174,7 +175,6 @@ public class TeeWeener
 
 		public void Start() {
 			controller.Add(this);
-			Debug.Log ("here");
 		}
 
 		ICurve GetCurveOrDefaultToLinear(ICurve curve) 
@@ -186,7 +186,8 @@ public class TeeWeener
 			return curve;
 		}
 
-		public TWSequence MoveTo(Vector3 pos, float duration, ICurve curve) {
+		public TWSequence MoveTo(Vector3 pos, float duration, ICurve curve) 
+		{
 			curve = GetCurveOrDefaultToLinear(curve);
 			Action<Vector3> setterLambda = x => _transform.position = x;
 			Func<Vector3> getterLambda = () => _transform.position;
@@ -195,16 +196,28 @@ public class TeeWeener
 			return this;
 		}
 
-		public void Update(float deltaTime) {
+		public TWSequence Wait(float duration) 
+		{
+			ITWProgress step = new TWWait(duration);
+			_processes.Add(step);
+			return this;
+		}
+
+		public void Update(float deltaTime) 
+		{
 			// Raise an exception if finished, you cannot play a finished seq.
 			if (IsFinihsed()) {
 				throw new TWEmptySequenceException(); 
 			}
 			// Play the current step
-			ITWProgress currentStep = _processes[0];
-			_spareDeltaTime = currentStep.Update(_spareDeltaTime + deltaTime);
+			if (_currentProcess != _processes[0]) {
+				_currentProcess = _processes[0];
+				_currentProcess.Start ();
+			}
+
+			_spareDeltaTime = _currentProcess.Update(_spareDeltaTime + deltaTime);
 			// Cleanup the step if its finished
-			if (currentStep.IsFinished()) {
+			if (_currentProcess.IsFinished()) {
 				_processes.RemoveAt(0);
 			}
 		}
