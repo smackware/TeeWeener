@@ -13,7 +13,7 @@ public class TeeWeenerController : MonoBehaviour
 	}
 
 	void Awake() {
-		gameObject.GetComponent<Transform>().hideFlags = HideFlags.HideInInspector |  HideFlags.HideInHierarchy;
+		gameObject.GetComponent<Transform>().hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
 	}
 
 	void Update() 
@@ -23,7 +23,7 @@ public class TeeWeenerController : MonoBehaviour
 		while (_sequences.Count > i) 
 		{
 			TeeWeener.TWSequence currentSequence = _sequences[i];
-			if (currentSequence.IsFinihsed()) {
+			if (currentSequence.IsFinished()) {
 				_sequences.RemoveAt(i);
 			} else {
 				currentSequence.Update(Time.deltaTime);

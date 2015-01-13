@@ -274,7 +274,7 @@ public class TeeWeener
 		}
 	}
 
-	public class TWSequence
+	public class TWSequence : ITWStep
 	{
 		private List<ITWStep> _steps;
 		private ITWStep _currentProcess;
@@ -341,10 +341,10 @@ public class TeeWeener
 			return this;
 		}
 
-		public void Update(float deltaTime) 
+		public float Update(float deltaTime) 
 		{
 			// Raise an exception if finished, you cannot play a finished seq.
-			if (IsFinihsed()) {
+			if (IsFinished()) {
 				throw new TWEmptySequenceException(); 
 			}
 			// If the current process is a new one, call Start on it.
@@ -360,16 +360,17 @@ public class TeeWeener
 				_currentProcessIndex++;
 				if (_currentProcessIndex >= _steps.Count) {
 					_finished = true;
-					return;
+					return 0;
 				}
 			} 
 			else // Otherwise - run update of the process
 			{
 				_spareDeltaTime = _currentProcess.Update(_spareDeltaTime + deltaTime);
 			}
+			return _spareDeltaTime;
 		}
 
-		public bool IsFinihsed() 
+		public bool IsFinished() 
 		{
 			return _finished;
 		}
